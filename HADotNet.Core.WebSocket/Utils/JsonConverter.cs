@@ -1,3 +1,4 @@
+using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -8,7 +9,7 @@ public class JsonConverter
 
     private readonly JsonSerializer _serializer;
 
-    public JsonConverter()
+    public JsonConverter(IEnumerable<Assembly> assemblies)
     {
         _serializer = new JsonSerializer
         {
@@ -17,11 +18,12 @@ public class JsonConverter
                 NamingStrategy = new SnakeCaseNamingStrategy()
             }
         };
+
+        _serializer.Converters.Add(new HAJsonConverter(assemblies));
     }
 
-    public TValue Deserialize<TValue>(ReadOnlyMemory<byte> readOnlyMemory)
+    public TValue Deserialize<TValue>(MemoryStream stream)
     {
-        using var stream = new MemoryStream(readOnlyMemory.ToArray());
         stream.Position = 0;
         using var streamReader = new StreamReader(stream);
         using var jsonReader = new JsonTextReader(streamReader);

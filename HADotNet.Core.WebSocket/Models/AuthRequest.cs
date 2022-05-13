@@ -1,8 +1,13 @@
 namespace HADotNet.Core.WebSocket.Models;
 
-public class AuthRequest
+/// <summary>
+/// A login request
+/// </summary>
+[MessageType("auth")]
+public class AuthRequest : Message
 {
-    public string Type => "auth";
-
+    /// <summary>
+    /// Access Token
+    /// </summary>
     public string AccessToken { get; set; }
 }
