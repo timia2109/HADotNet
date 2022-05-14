@@ -4,7 +4,7 @@ namespace HADotNet.Core.WebSocket.Models;
 /// Valid Authentication
 /// </summary>
 [MessageType("auth_ok")]
-public class AuthOkResponse
+public class AuthOkResponse : Message
 {
     /// <summary>
     /// Home Assistant Version

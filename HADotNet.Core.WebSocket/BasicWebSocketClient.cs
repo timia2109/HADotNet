@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Reflection;
 using HADotNet.Core.WebSocket.Exceptions;
@@ -13,8 +12,24 @@ public class BasicWebSocketClient : IDisposable
     private readonly IdCounter _idCounter;
     private readonly ClientWebSocket _webSocket;
     private readonly JsonConverter _json;
+    private MessageListener _messageListener;
 
-    public BasicWebSocketClient(Uri instanceUri,
+    /// <summary>
+    /// Default Timeout
+    /// </summary>
+    public TimeSpan RequestTimeout { get; set; } = TimeSpan.FromSeconds(10);
+
+    public CancellationToken CancellationToken
+    {
+        get
+        {
+            var source = new CancellationTokenSource();
+            source.CancelAfter(RequestTimeout);
+            return source.Token;
+        }
+    }
+
+    internal BasicWebSocketClient(Uri instanceUri,
         string token,
         IEnumerable<Assembly> assemblies)
     {
@@ -31,8 +46,14 @@ public class BasicWebSocketClient : IDisposable
         AccessToken = _token
     };
 
-    private async Task<TType> ReadAsync<TType>(
-        CancellationToken cancellationToken) where TType : Message
+    private async Task<HaMessage> ReadHaMessageAsync(
+        CancellationToken cancellationToken)
+    {
+        var response = await ReadAsync(cancellationToken);
+        return (HaMessage)response;
+    }
+
+    private async Task<Message> ReadAsync(CancellationToken cancellationToken)
     {
         var messageStream = new MemoryStream();
         bool complete = false;
@@ -48,7 +69,7 @@ public class BasicWebSocketClient : IDisposable
             complete = response.EndOfMessage;
         }
 
-        return (TType)_json.Deserialize<Message>(messageStream);
+        return _json.Deserialize<Message>(messageStream);
     }
 
     private async Task SendAsync(Message message,
@@ -62,6 +83,30 @@ public class BasicWebSocketClient : IDisposable
         );
     }
 
+    public void Unsubscribe(int messageId)
+    {
+        CheckActiveListener();
+        _messageListener.Unsubscribe(messageId);
+    }
+
+    public void Subscribe(
+        int messageId,
+        Action<HaMessage> message,
+        bool oneTime
+    )
+    {
+        CheckActiveListener();
+        _messageListener.Subscribe(messageId, message, oneTime);
+    }
+
+    /// <summary>
+    /// Sends a message through the socket and subscribes to it answer
+    /// </summary>
+    /// <param name="message">Message</param>
+    /// <param name="callback">The callback</param>
+    /// <param name="cancellationToken">Cancel operation</param>
+    /// <param name="oneTime">Is this a one time subscription</param>
+    /// <returns>Message Id</returns>
     public async Task<int> SendAndSubscribeAsync(
         HaMessage message,
         Action<HaMessage> callback,
@@ -69,9 +114,15 @@ public class BasicWebSocketClient : IDisposable
         bool oneTime = true
     )
     {
+        CheckActiveListener();
         var messageId = _idCounter.Value;
-        var subscription = new Subscription(callback, oneTime);
-
+        _messageListener.Subscribe(
+            messageId,
+            callback,
+            oneTime
+        );
+        await SendAsync(message, messageId, cancellationToken);
+        return messageId;
     }
 
     /// <summary>
@@ -112,7 +163,7 @@ public class BasicWebSocketClient : IDisposable
     /// <exception cref="AuthException">
     /// The Client was unable to authenticate
     /// </exception>
-    public async Task ConnectAsync(CancellationToken cancellationToken)
+    public async Task<AuthOkResponse> ConnectAsync(CancellationToken cancellationToken)
     {
         await _webSocket.ConnectAsync(_instanceUri, cancellationToken);
         await _webSocket.SendAsync(
@@ -121,23 +172,59 @@ public class BasicWebSocketClient : IDisposable
         );
 
         // Wait for auth request
-        var response = await ReadAsync<AuthRequestCommand>(cancellationToken);
+        var response = await ReadAsync(cancellationToken);
+
+        if (response is not AuthRequestCommand)
+        {
+            throw new Exception($"Wrong API Response {response.GetType().Name}");
+        }
 
         // Send auth
         await SendAsync(AuthRequest, cancellationToken);
 
         // Wait for result
-        var authResponse = await ReadAsync<Message>(cancellationToken);
+        var authResponse = await ReadAsync(cancellationToken);
 
         // Accept auth
         if (authResponse is AuthInvalidResponse air)
         {
             throw new AuthException(air);
         }
+        else if (authResponse is AuthOkResponse ok)
+        {
+            // Everything is great
+            return ok;
+        }
+        else
+        {
+            throw new Exception(
+                $"Type is not allowed at this state {authResponse.GetType().Name}"
+            );
+        }
+    }
+
+    public void StartListener()
+    {
+        _messageListener = new MessageListener(ReadHaMessageAsync);
+    }
+
+    public void StopListener()
+    {
+        CheckActiveListener();
+        _messageListener.Dispose();
+    }
+
+    private void CheckActiveListener()
+    {
+        if (_messageListener == null)
+        {
+            throw new ListenerInactiveException();
+        }
     }
 
     public void Dispose()
     {
+        _messageListener?.Dispose();
         _webSocket.Dispose();
     }
 
