@@ -7,15 +7,15 @@ namespace HADotNet.Core.WebSocket.Utils;
 public class RequestHandler<TMessage> where TMessage : HaMessage
 {
     private readonly IHaWebSocketClient _client;
-    private readonly TaskCompletionSource<TMessage> _compleation;
+    private readonly TaskCompletionSource<TMessage> _taskCompletion;
 
     public RequestHandler(IHaWebSocketClient client)
     {
-        _compleation = new TaskCompletionSource<TMessage>();
+        _taskCompletion = new TaskCompletionSource<TMessage>();
         _client = client;
     }
 
-    public Task<TMessage> Task => _compleation.Task;
+    public Task<TMessage> Task => _taskCompletion.Task;
 
     public async Task SendMessage<TRequest>(TRequest request,
         CancellationToken cancellationToken
@@ -33,13 +33,13 @@ public class RequestHandler<TMessage> where TMessage : HaMessage
 
     private void CancelRequest()
     {
-        _compleation.SetException(new TimeoutException());
+        _taskCompletion.SetException(new TimeoutException());
     }
 
     private void HandleResponse(HaMessage message)
     {
         var response = (TMessage)message;
-        _compleation.SetResult(response);
+        _taskCompletion.SetResult(response);
     }
 
 }
