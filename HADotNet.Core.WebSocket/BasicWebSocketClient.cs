@@ -55,14 +55,21 @@ public class BasicWebSocketClient : IDisposable
 
     private async Task<Message> ReadAsync(CancellationToken cancellationToken)
     {
-        var messageStream = new MemoryStream();
+        using var messageStream = new MemoryStream();
         bool complete = false;
+        byte[] buffer;
 
         while (!complete)
         {
-            var arraySegment = new ArraySegment<byte>();
+            buffer = new byte[255];
+            var arraySegment = new ArraySegment<byte>(buffer);
             var response = await _webSocket
                 .ReceiveAsync(arraySegment, cancellationToken);
+
+            if (response.MessageType == WebSocketMessageType.Close)
+            {
+                Console.WriteLine("CLOSE MESSAGE!!!");
+            }
 
             messageStream.Write(arraySegment);
 
@@ -75,8 +82,10 @@ public class BasicWebSocketClient : IDisposable
     private async Task SendAsync(Message message,
         CancellationToken cancellationToken)
     {
+        var payload = _json.Serialize(message);
+
         await _webSocket.SendAsync(
-            _json.Serialize(message),
+            payload,
             WebSocketMessageType.Text,
             true,
             cancellationToken
@@ -166,10 +175,6 @@ public class BasicWebSocketClient : IDisposable
     public async Task<AuthOkResponse> ConnectAsync(CancellationToken cancellationToken)
     {
         await _webSocket.ConnectAsync(_instanceUri, cancellationToken);
-        await _webSocket.SendAsync(
-            _json.Serialize(AuthRequest), WebSocketMessageType.Text,
-            true, cancellationToken
-        );
 
         // Wait for auth request
         var response = await ReadAsync(cancellationToken);
@@ -186,7 +191,11 @@ public class BasicWebSocketClient : IDisposable
         var authResponse = await ReadAsync(cancellationToken);
 
         // Accept auth
-        if (authResponse is AuthInvalidResponse air)
+        if (authResponse == null)
+        {
+            throw new ArgumentNullException(nameof(authResponse));
+        }
+        else if (authResponse is AuthInvalidResponse air)
         {
             throw new AuthException(air);
         }
@@ -206,6 +215,7 @@ public class BasicWebSocketClient : IDisposable
     public void StartListener()
     {
         _messageListener = new MessageListener(ReadHaMessageAsync);
+        _messageListener.Start();
     }
 
     public void StopListener()

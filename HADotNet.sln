@@ -14,6 +14,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HADotNet.Core", "HADotNet.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HADotNet.Core.WebSocket", "HADotNet.Core.WebSocket\HADotNet.Core.WebSocket.csproj", "{3B049BED-9C44-4148-9655-BF7A5208A062}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HADotNet.Core.CliTest", "HADotNet.Core.CliTest\HADotNet.Core.CliTest.csproj", "{D4959340-B30B-43EC-941C-F4FE9A246E5C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{3B049BED-9C44-4148-9655-BF7A5208A062}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B049BED-9C44-4148-9655-BF7A5208A062}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B049BED-9C44-4148-9655-BF7A5208A062}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4959340-B30B-43EC-941C-F4FE9A246E5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4959340-B30B-43EC-941C-F4FE9A246E5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4959340-B30B-43EC-941C-F4FE9A246E5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4959340-B30B-43EC-941C-F4FE9A246E5C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

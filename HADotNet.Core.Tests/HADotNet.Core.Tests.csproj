@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HADotNet.Core\HADotNet.Core.csproj" />
+    <ProjectReference Include="..\HADotNet.Core.WebSocket\HADotNet.Core.WebSocket.csproj" />
   </ItemGroup>
 
 </Project>

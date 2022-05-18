@@ -22,6 +22,8 @@ public class HAJsonConverter : Newtonsoft.Json.JsonConverter
         return objectType.IsAssignableTo(typeof(Message));
     }
 
+    public override bool CanWrite => false;
+
     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
         var jObject = JObject.Load(reader);
@@ -37,7 +39,5 @@ public class HAJsonConverter : Newtonsoft.Json.JsonConverter
     }
 
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
+    { }
 }

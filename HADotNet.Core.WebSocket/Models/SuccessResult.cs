@@ -8,5 +8,5 @@ public class SuccessResult : HaMessage
     /// </summary>
     public bool Success { get; set; }
 
-    // TODO: Add result parameter 
+    public Dictionary<string, object> Result { get; set; }
 }

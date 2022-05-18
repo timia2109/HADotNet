@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -31,16 +32,17 @@ public class JsonConverter
         return _serializer.Deserialize<TValue>(jsonReader);
     }
 
-    public ReadOnlyMemory<byte> Serialize<TValue>(TValue data)
+    public ArraySegment<byte> Serialize<TValue>(TValue data)
     {
         using var stream = new MemoryStream();
-        using var streamWriter = new StreamWriter(stream);
-        using var jsonWriter = new JsonTextWriter(streamWriter);
+        using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
+        using (var jsonWriter = new JsonTextWriter(streamWriter))
+        {
+            _serializer.Serialize(jsonWriter, data);
+        }
 
-        _serializer.Serialize(jsonWriter, data);
-
-        stream.Position = 0;
-        return new ReadOnlyMemory<byte>(stream.ToArray());
+        var streamArray = stream.ToArray();
+        return new ArraySegment<byte>(streamArray, 3, streamArray.Length - 3);
     }
 
 }

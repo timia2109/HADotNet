@@ -94,13 +94,14 @@ internal class MessageListener : IDisposable
             return;
 
         var subscription = _callbacks[messageId];
-        subscription.Callback(message);
 
         // Drop if this is a one time subscription
         if (subscription.OneTime)
         {
             Unsubscribe(messageId);
         }
+
+        subscription.Callback(message);
     }
 
     public void Dispose()

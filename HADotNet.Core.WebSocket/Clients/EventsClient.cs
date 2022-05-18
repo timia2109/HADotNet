@@ -38,6 +38,27 @@ public class EventsClient
         return result;
     }
 
+    public Task<SuccessResult> FireEvent(string eventType,
+        Dictionary<string, object> eventData)
+    {
+        return FireEvent(new FireEventMessage
+        {
+            EventData = eventData,
+            EventType = eventType
+        });
+    }
+
+    public async Task<SuccessResult> FireEvent(
+        FireEventMessage fireEventMessage)
+    {
+        var requestHandler = new RequestHandler<SuccessResult>(_client);
+        await requestHandler.SendMessage(fireEventMessage,
+            _client.CancellationToken);
+        var result = await requestHandler.Task;
+
+        return result;
+    }
+
     private class EventSubscriptionHelper
     {
         private readonly Action<EventMessage> _callback;
