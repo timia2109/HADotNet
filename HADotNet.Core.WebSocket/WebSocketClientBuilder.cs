@@ -26,7 +26,7 @@ public class WebSocketClientBuilder
     /// <summary>
     /// Gets the client
     /// </summary>
-    public BasicWebSocketClient Client => Build();
+    public IHaWebSocketClient Client => Build();
 
     public WebSocketClientBuilder()
     {
@@ -35,7 +35,7 @@ public class WebSocketClientBuilder
         };
     }
 
-    private BasicWebSocketClient Build()
+    private HaWebSocketClient Build()
     {
         if (string.IsNullOrEmpty(Token))
             throw new ArgumentNullException(nameof(Token));
@@ -46,7 +46,7 @@ public class WebSocketClientBuilder
         if (!Assemblies.Any())
             throw new ArgumentException($"{nameof(Assemblies)} is empty");
 
-        return new BasicWebSocketClient(InstanceUri, Token, Assemblies);
+        return new HaWebSocketClient(InstanceUri, Token, Assemblies);
     }
 
 }

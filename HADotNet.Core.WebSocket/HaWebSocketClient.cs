@@ -4,7 +4,7 @@ using HADotNet.Core.WebSocket.Exceptions;
 
 namespace HADotNet.Core.WebSocket;
 
-public class BasicWebSocketClient : IDisposable
+internal class HaWebSocketClient : IHaWebSocketClient
 {
 
     private readonly Uri _instanceUri;
@@ -29,7 +29,7 @@ public class BasicWebSocketClient : IDisposable
         }
     }
 
-    internal BasicWebSocketClient(Uri instanceUri,
+    internal HaWebSocketClient(Uri instanceUri,
         string token,
         IEnumerable<Assembly> assemblies)
     {
@@ -45,6 +45,8 @@ public class BasicWebSocketClient : IDisposable
     {
         AccessToken = _token
     };
+
+    public TimeSpan RequestTimeOut { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
     private async Task<HaMessage> ReadHaMessageAsync(
         CancellationToken cancellationToken)
@@ -238,5 +240,9 @@ public class BasicWebSocketClient : IDisposable
         _webSocket.Dispose();
     }
 
-
+    public void ResumeListener()
+    {
+        CheckActiveListener();
+        _messageListener.Start();
+    }
 }

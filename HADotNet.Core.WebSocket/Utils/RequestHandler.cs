@@ -6,10 +6,10 @@ namespace HADotNet.Core.WebSocket.Utils;
 /// <typeparam name="TMessage">Type of the response</typeparam>
 public class RequestHandler<TMessage> where TMessage : HaMessage
 {
-    private readonly BasicWebSocketClient _client;
+    private readonly IHaWebSocketClient _client;
     private readonly TaskCompletionSource<TMessage> _compleation;
 
-    public RequestHandler(BasicWebSocketClient client)
+    public RequestHandler(IHaWebSocketClient client)
     {
         _compleation = new TaskCompletionSource<TMessage>();
         _client = client;
@@ -27,6 +27,13 @@ public class RequestHandler<TMessage> where TMessage : HaMessage
             HandleResponse,
             cancellationToken
         );
+
+        cancellationToken.Register(CancelRequest);
+    }
+
+    private void CancelRequest()
+    {
+        _compleation.SetException(new TimeoutException());
     }
 
     private void HandleResponse(HaMessage message)
