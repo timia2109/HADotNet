@@ -5,15 +5,11 @@ namespace HADotNet.Core.WebSocket.Clients;
 /// <summary>
 /// Client for communicating with Events
 /// </summary>
-public class EventsClient
+public class EventsClient : AHaClient
 {
 
-    private readonly BasicWebSocketClient _client;
-
-    public EventsClient(BasicWebSocketClient client)
-    {
-        _client = client;
-    }
+    public EventsClient(IHaWebSocketClient client) : base(client)
+    { }
 
     public async Task<SuccessResult> SubscribeEvent(
         Action<EventMessage> eventDelegate,
@@ -25,15 +21,14 @@ public class EventsClient
             EventType = eventType
         };
 
-        var requestHandler = new RequestHandler<SuccessResult>(_client);
-        await requestHandler.SendMessage(subscription,
-            _client.CancellationToken);
-        var result = await requestHandler.Task;
+        var result = await SendAndReceiveAsync<SuccessResult>(subscription,
+            Client.CancellationToken);
 
         if (result.Success)
         {
-            var helper = new EventSubscriptionHelper(eventDelegate);
-            _client.Subscribe(result.Id, helper.OnMessage, false);
+            Client.Subscribe(result.Id,
+                CreateSubscriptionHelper(eventDelegate),
+                false);
         }
         return result;
     }
@@ -48,30 +43,12 @@ public class EventsClient
         });
     }
 
-    public async Task<SuccessResult> FireEvent(
+    public Task<SuccessResult> FireEvent(
         FireEventMessage fireEventMessage)
     {
-        var requestHandler = new RequestHandler<SuccessResult>(_client);
-        await requestHandler.SendMessage(fireEventMessage,
-            _client.CancellationToken);
-        var result = await requestHandler.Task;
-
-        return result;
+        return SendAndReceiveAsync<SuccessResult>(
+            fireEventMessage, Client.CancellationToken
+        );
     }
 
-    private class EventSubscriptionHelper
-    {
-        private readonly Action<EventMessage> _callback;
-
-        public EventSubscriptionHelper(Action<EventMessage> callback)
-        {
-            _callback = callback;
-        }
-
-        public void OnMessage(HaMessage message)
-        {
-            var eventMessage = (EventMessage)message;
-            _callback(eventMessage);
-        }
-    }
 }
