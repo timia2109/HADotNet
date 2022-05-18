@@ -88,6 +88,8 @@ internal class MessageListener : IDisposable
     /// <param name="message">Message</param>
     private void HandleMessage(HaMessage message)
     {
+        if (message == null) return;
+
         var messageId = message.Id;
         // Are there active Listener?
         if (!_callbacks.ContainsKey(messageId))
