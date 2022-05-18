@@ -2,8 +2,8 @@
 using HADotNet.Core.WebSocket.Clients;
 using Newtonsoft.Json;
 
-var instance = new Uri(Environment.GetEnvironmentVariable("HADotNet:Tests:Instance"));
-var apiKey = Environment.GetEnvironmentVariable("HADotNet:Tests:ApiKey");
+var instance = new Uri(Environment.GetEnvironmentVariable("HADotNet_Tests_Instance"));
+var apiKey = Environment.GetEnvironmentVariable("HADotNet_Tests_ApiKey");
 
 void Report(object o)
 {
