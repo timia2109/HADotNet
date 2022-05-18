@@ -44,7 +44,7 @@ public interface IHaWebSocketClient : IDisposable
     /// Is this a one time command or should it trigger 
     /// on each message?</param>
     /// <returns>Message Id</returns>
-    Task<int> SendAndSubscribeAsync(HaMessage message, Action<HaMessage> callback, 
+    Task<int> SendAndSubscribeAsync(HaMessage message, Action<HaMessage> callback,
         CancellationToken cancellationToken, bool oneTime = true);
 
     /// <summary>
@@ -86,4 +86,14 @@ public interface IHaWebSocketClient : IDisposable
     /// Resumes the current listener. No subscription will disposed
     /// </summary>
     void ResumeListener();
+
+    /// <summary>
+    /// Triggers when the client connects
+    /// </summary>
+    event Action OnConnect;
+
+    /// <summary>
+    /// Triggers when the client disconnects
+    /// </summary>
+    event Action OnDisconnect;
 }

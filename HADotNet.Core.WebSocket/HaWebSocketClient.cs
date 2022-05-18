@@ -14,6 +14,9 @@ internal class HaWebSocketClient : IHaWebSocketClient
     private readonly JsonConverter _json;
     private MessageListener _messageListener;
 
+    public event Action OnConnect;
+    public event Action OnDisconnect;
+
     /// <summary>
     /// Default Timeout
     /// </summary>
@@ -218,12 +221,22 @@ internal class HaWebSocketClient : IHaWebSocketClient
     {
         _messageListener = new MessageListener(ReadHaMessageAsync);
         _messageListener.Start();
+        OnConnect += ResumeListener;
+        OnDisconnect += StopListenerByDisconnect;
+    }
+
+    private async void StopListenerByDisconnect()
+    {
+        _messageListener.Stop();
+        // TODO: Handle automatic reconnection
     }
 
     public void StopListener()
     {
         CheckActiveListener();
         _messageListener.Dispose();
+        OnConnect -= ResumeListener;
+        OnDisconnect -= StopListenerByDisconnect;
     }
 
     private void CheckActiveListener()
